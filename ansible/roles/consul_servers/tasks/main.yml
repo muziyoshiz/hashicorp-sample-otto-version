@@ -1,0 +1,3 @@
+# Common task
+- name: Restart consul
+  service: name=consul state=restarted

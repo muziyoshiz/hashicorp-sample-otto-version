@@ -1,0 +1,36 @@
+# Install MariaDB
+- name: Install MariaDB
+  yum: name="{{ item }}" state=present
+  with_items:
+    - mariadb
+    - mariadb-server
+    - MySQL-python # required by mysql_db and mysql_user module
+- name: Start MariaDB and create autostart setting
+  service: name=mariadb state=started enabled=yes
+# Set root account
+- name: Set root account of MariaDB
+  mysql_user:
+    name: root
+    password: "{{ mariadb.root.password }}"
+    host: localhost
+# Create .my.cnf for creating database
+- name: Create /root/.my.cnf
+  template: src=mariadb/my.cnf.j2 dest="/root/.my.cnf" mode=0600
+# Create databases
+- name: Create databases
+  mysql_db: name="{{ item }}" state=present
+  with_items: "{{ mariadb.databases }}"
+# Create MariaDB users for sample manager and grant all plivileges of the specified database
+- name: Create MariaDB users for sample manager
+  mysql_user:
+    name: "{{ mariadb.manager_user.name }}"
+    password: "{{ mariadb.manager_user.password }}"
+    priv: "{{ mariadb.manager_user.database }}.*:ALL"
+    host: "{{ item }}"
+    state: present
+  with_items: "{{ mariadb.manager_user.hosts }}"
+# Create Consul client settings
+- name: Create mariadb service information for consul
+  template: src="consul/mariadb.json" dest="/etc/consul.d/mariadb.json" owner=root group=root mode=0644
+- name: Restart consul
+  service: name=consul state=restarted
