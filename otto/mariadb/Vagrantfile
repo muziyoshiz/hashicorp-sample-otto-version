@@ -1,0 +1,77 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Token files (gitignored)
+# NOTICE: Please create these files and write token only in one line
+#         (Only one newline character is acceptable)
+ATLAS_TOKEN_FILEPATH  = "./atlas_token"
+
+# IP addresses on host-only network
+vagrant_ipaddr_consul_server  = "192.168.33.10"
+vagrant_ipaddr_mariadb_server = "192.168.33.20"
+# When multiple managers are required, set multiple IP addresses as follows
+# vagrant_ipaddr_managers       = [ "192.168.33.30", "192.168.33.31" ]
+vagrant_ipaddr_managers       = [ "192.168.33.30" ]
+
+# Consul settings
+# Toggle switch for join method to Consul cluster
+consul_enables_atlas = false
+# Settings when consul_enables_atlas == true
+consul_atlas_infrastructure_name = "please input your infrastructure name"
+# Settings when consul_enables_atlas == false
+consul_ipaddr_join = vagrant_ipaddr_consul_server
+
+# MariaDB server settings
+# Auto-gerenated root password
+mariadb_root_password = (0...8).map{ (65 + rand(26)).chr }.join
+# Database, username and password for sample manager application
+mariadb_manager_database      = "sample"
+mariadb_manager_user_name     = "manager"
+mariadb_manager_user_password = "manager-password"
+
+# Atlas settings
+if consul_enables_atlas and File.exists?(ATLAS_TOKEN_FILEPATH)
+  atlas_token = File.open(ATLAS_TOKEN_FILEPATH).read.chomp
+end
+
+# Location of Ansible playbooks
+ansible_dir = "../../ansible"
+
+Vagrant.configure(2) do |config|
+  config.vm.define "mariadb" do |c|
+    c.vm.box = "centos/7"
+    c.vm.provider "virtualbox" do |vb|
+      # Customize the amount of memory on the VM:
+      vb.memory = "512"
+      vb.cpus = 1
+    end
+
+    c.vm.hostname = "mariadb"
+    c.vm.network "private_network", ip: vagrant_ipaddr_mariadb_server
+
+    c.vm.provision "ansible" do |ansible|
+      ansible.playbook = ansible_dir + "/mariadb_servers.yml"
+      ansible.extra_vars = {
+        consul: {
+          enables_atlas: consul_enables_atlas,
+          atlas_infrastructure_name: consul_atlas_infrastructure_name,
+          atlas_token: atlas_token,
+          ipaddr_join: consul_ipaddr_join,
+          ipaddr_bind: vagrant_ipaddr_mariadb_server
+        },
+        mariadb: {
+          root: {
+            password: mariadb_root_password
+          },
+          databases: [ mariadb_manager_database ],
+          manager_user: {
+            name: mariadb_manager_user_name,
+            password: mariadb_manager_user_password,
+            database: mariadb_manager_database,
+            hosts: vagrant_ipaddr_managers
+          }
+        }
+      }
+    end
+  end
+end

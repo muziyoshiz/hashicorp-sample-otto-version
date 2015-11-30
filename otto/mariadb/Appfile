@@ -1,0 +1,13 @@
+application {
+  name = "mariadb"
+  type = "custom"
+}
+
+customization "dev" {
+  vagrantfile = "./Vagrantfile"
+}
+
+customization "dev-dep" {
+  vagrantfile = "./Vagrantfile.fragment"
+}
+

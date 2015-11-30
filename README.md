@@ -4,7 +4,7 @@ Sample configuration of HashiCorp tools, Otto version
 
 ## Overview
 
-This sample configuration is Otto version of [muziyoshiz/hashicorp-sample](https://github.com/muziyoshiz/hashicorp-sample "muziyoshiz/hashicorp-sample").
+This is the Otto version of [muziyoshiz/hashicorp-sample](https://github.com/muziyoshiz/hashicorp-sample "muziyoshiz/hashicorp-sample").
 
 This sample is only for trying immature Otto features. It requires some complicated manual settings more than "otto compile" and "otto dev" before running. I do not recommend using this configuration as a practicable one.
 
