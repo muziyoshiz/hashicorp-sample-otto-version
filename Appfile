@@ -1,0 +1,8 @@
+application {
+  name = "hashicorp-sample-manager"
+  type = "php"
+
+  dependency {
+    source = "./otto/mariadb"
+  }
+}
