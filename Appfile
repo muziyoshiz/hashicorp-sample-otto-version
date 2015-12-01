@@ -5,4 +5,8 @@ application {
   dependency {
     source = "./otto/mariadb"
   }
+
+  dependency {
+    source = "./otto/cdh_quickstart"
+  }
 }

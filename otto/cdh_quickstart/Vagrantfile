@@ -1,0 +1,54 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Token files (gitignored)
+# NOTICE: Please create these files and write token only in one line
+#         (Only one newline character is acceptable)
+ATLAS_TOKEN_FILEPATH  = "./atlas_token"
+
+# IP addresses on host-only network
+vagrant_ipaddr_consul_server  = "192.168.33.10"
+vagrant_ipaddr_cdh_quickstart = "192.168.33.40"
+
+# Consul settings
+# Toggle switch for join method to Consul cluster
+consul_enables_atlas = false
+# Settings when consul_enables_atlas == true
+consul_atlas_infrastructure_name = "please input your infrastructure name"
+# Settings when consul_enables_atlas == false
+consul_ipaddr_join = vagrant_ipaddr_consul_server
+
+# Atlas settings
+if consul_enables_atlas and File.exists?(ATLAS_TOKEN_FILEPATH)
+  atlas_token = File.open(ATLAS_TOKEN_FILEPATH).read.chomp
+end
+
+# Location of Ansible playbooks
+ansible_dir = "../../ansible"
+
+Vagrant.configure(2) do |config|
+  config.vm.define "cdh-quickstart" do |c|
+    c.vm.box = "quickstart/cdh"
+
+    c.vm.hostname = "quickstart.cloudera"
+    c.vm.network "private_network", ip: vagrant_ipaddr_cdh_quickstart
+
+    c.vm.provider "virtualbox" do |vb|
+      vb.cpus = 2
+      vb.memory = "8192"
+    end
+
+    c.vm.provision "ansible" do |ansible|
+      ansible.playbook = "ansible/cdh_quickstart.yml"
+      ansible.extra_vars = {
+        consul: {
+          enables_atlas: consul_enables_atlas,
+          atlas_infrastructure_name: consul_atlas_infrastructure_name,
+          atlas_token: atlas_token,
+          ipaddr_join: consul_ipaddr_join,
+          ipaddr_bind: vagrant_ipaddr_cdh_quickstart
+        }
+      }
+    end
+  end
+end
